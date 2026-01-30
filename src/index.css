@@ -3,5 +3,15 @@
 @tailwind utilities;
 
 body {
-  @apply bg-dark text-white antialiased;
+  @apply bg-[#0B0F14] text-white antialiased;
+}
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
 }
