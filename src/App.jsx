@@ -10,18 +10,21 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
 
+      {/* Landing Page */}
       <Route
         path="/programs/worship-keys"
         element={<WorshipKeys />}
       />
 
+      {/* Enrollment Page */}
       <Route
-        path="/enroll/worship-keys"
+        path="/programs/worship-keys/enroll"
         element={<WorshipKeysEnroll />}
       />
 
+      {/* Thank You Page */}
       <Route
-        path="/thank-you"
+        path="/programs/worship-keys/thank-you"
         element={<ThankYou />}
       />
     </Routes>
