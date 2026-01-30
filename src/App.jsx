@@ -4,29 +4,35 @@ import Home from "./pages/Home";
 import WorshipKeys from "./pages/WorshipKeys";
 import WorshipKeysEnroll from "./pages/WorshipKeysEnroll";
 import ThankYou from "./pages/ThankYou";
+import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
+    <>
+      {/* Ensures every route loads from top */}
+      <ScrollToTop />
 
-      {/* Landing Page */}
-      <Route
-        path="/programs/worship-keys"
-        element={<WorshipKeys />}
-      />
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-      {/* Enrollment Page */}
-      <Route
-        path="/programs/worship-keys/enroll"
-        element={<WorshipKeysEnroll />}
-      />
+        {/* Landing Page */}
+        <Route
+          path="/programs/worship-keys"
+          element={<WorshipKeys />}
+        />
 
-      {/* Thank You Page */}
-      <Route
-        path="/programs/worship-keys/thank-you"
-        element={<ThankYou />}
-      />
-    </Routes>
+        {/* Enrollment Page */}
+        <Route
+          path="/programs/worship-keys/enroll"
+          element={<WorshipKeysEnroll />}
+        />
+
+        {/* Thank You Page */}
+        <Route
+          path="/programs/worship-keys/thank-you"
+          element={<ThankYou />}
+        />
+      </Routes>
+    </>
   );
 }
