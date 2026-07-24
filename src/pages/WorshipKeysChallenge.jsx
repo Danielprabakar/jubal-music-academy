@@ -290,8 +290,19 @@ function RegistrationModal({ onClose }) {
   };
 
   // Razorpay's own callbacks are NOT proof of payment — only the backend's
-  // independent verification (webhook) is. handler/ondismiss only move the UI
-  // to a "pending confirmation" state, never a final success state.
+  // independent verification (webhook) is. handler/callback_url/ondismiss
+  // only move the UI to a "pending confirmation" state, never a final
+  // success state.
+  //
+  // callback_url is required (not just `handler`): some payment methods
+  // (netbanking, certain UPI/wallet flows) leave this page and return via
+  // a full browser redirect rather than an in-page JS callback. Without
+  // callback_url, that redirect lands back on the bare page URL with no
+  // query param, wiping all React state and showing the plain landing
+  // page instead of a confirmation screen. Razorpay ignores `handler` for
+  // success once callback_url is set, so this covers every payment method
+  // uniformly — the `?payment=success` query param is what the page reads
+  // after the reload (see the early-return check in the main component).
   const openCheckout = (order) => {
     const rzp = new window.Razorpay({
       key: order.keyId,
@@ -302,6 +313,7 @@ function RegistrationModal({ onClose }) {
       description: "Worship Keys Challenge — 3 Day Workshop",
       prefill: { name: form.name, email: form.email, contact: form.phone },
       theme: { color: "#F59E0B" },
+      callback_url: `${window.location.origin}/programs/worship-keys-challenge?payment=success&registrationId=${encodeURIComponent(registrationId)}`,
       handler: () => setPhase("awaiting-confirmation"),
       modal: { ondismiss: () => setPhase("dismissed") },
     });
@@ -541,7 +553,8 @@ function SuccessPage({ registrationId }) {
 // ─── Main Page Component ──────────────────────────────────────────────────────
 export default function WorshipKeysChallenge() {
   const [searchParams] = useSearchParams();
-  if (searchParams.get("payment") === "success") return <SuccessPage />;
+  if (searchParams.get("payment") === "success")
+    return <SuccessPage registrationId={searchParams.get("registrationId")} />;
 
   const [scrolled, setScrolled] = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
