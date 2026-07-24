@@ -2,7 +2,7 @@
 //  Home.jsx — Jubal Music Academy  (copy this file to src/pages/Home.jsx)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Reveal from "../components/Reveal";
@@ -14,8 +14,24 @@ import logo from "../assets/jma-logo.png";
 import {
   ArrowRight,
   Music2,
+  Music3,
+  Music4,
   TrendingUp,
   Church,
+  Piano,
+  Guitar,
+  Mic2,
+  Drum,
+  BookOpen,
+  GraduationCap,
+  Layers,
+  Presentation,
+  HeartHandshake,
+  IndianRupee,
+  Video,
+  Radio,
+  CheckCircle2,
+  Trophy,
 } from "lucide-react";
 
 
@@ -95,7 +111,8 @@ const journey = [
 function ProgramCard({
   title,
   desc,
-  icon,
+  icon: Icon,
+  image,
   hoveredProgram,
   setHoveredProgram,
 }) {
@@ -124,6 +141,25 @@ function ProgramCard({
           : "1px solid rgba(245,196,81,.12)",
       }}
     >
+      {/* Instrument photo — translucent by default, glows into view on hover */}
+      <motion.img
+        src={image}
+        alt=""
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ filter: "saturate(0.55)" }}
+        animate={{ opacity: isHovered ? 0.4 : 0.1 }}
+        transition={{ duration: 0.4 }}
+      />
+      {/* Fixed dark wash — keeps title/description legible at any hover state */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg,rgba(11,15,22,0.35) 0%,rgba(11,15,22,0.55) 45%,#0B0F16 88%)",
+        }}
+      />
+
       {/* Gold Glow */}
       <motion.div
         className="absolute inset-0"
@@ -133,7 +169,7 @@ function ProgramCard({
         transition={{ duration: 0.3 }}
         style={{
           background:
-            "radial-gradient(circle at top,rgba(245,196,81,.12),transparent 70%)",
+            "radial-gradient(circle at top,rgba(245,196,81,.18),transparent 70%)",
         }}
       />
 
@@ -147,9 +183,13 @@ function ProgramCard({
           type: "spring",
           stiffness: 250,
         }}
-        className="relative z-10 text-5xl mb-6"
+        className="relative z-10 mb-6 w-14 h-14 rounded-2xl flex items-center justify-center"
+        style={{
+          background: "rgba(245,196,81,0.1)",
+          border: "1px solid rgba(245,196,81,0.2)",
+        }}
       >
-        {icon}
+        <Icon size={26} color="#F5C451" strokeWidth={1.75} />
       </motion.div>
 
       {/* Title */}
@@ -194,36 +234,54 @@ export default function Home() {
   const navigate = useNavigate();
   const [hoveredProgram, setHoveredProgram] = useState(null);
 
+  // Scroll-linked "moving deeper into the scene" effect on the hero:
+  // background zooms in and fades while content parallaxes upward faster
+  // than normal scroll, as the section scrolls out of view.
+  const heroRef = useRef(null);
+  const { scrollYProgress: heroScroll } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroBgScale = useTransform(heroScroll, [0, 1], [1, 1.3]);
+  const heroBgOpacity = useTransform(heroScroll, [0, 1], [1, 0.15]);
+  const heroContentY = useTransform(heroScroll, [0, 1], [0, -120]);
+
   const programs = [
     {
-      icon: "🎹",
+      icon: Piano,
       title: "Piano",
       desc: "Classical and contemporary training focused on posture, technique, tone control, sight-reading, and musical expression.",
+      image: "https://images.unsplash.com/photo-1552422535-c45813c61732?w=800&h=900&fit=crop&auto=format",
     },
     {
-      icon: "🎼",
+      icon: Music4,
       title: "Electronic Keyboard",
       desc: "Practical keyboard training covering chords, accompaniment patterns, rhythm, and confidence in live playing.",
+      image: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&h=900&fit=crop&auto=format",
     },
     {
-      icon: "🎸",
+      icon: Guitar,
       title: "Guitar",
       desc: "Classical, plectrum, and contemporary guitar with emphasis on rhythm, clarity, fretboard understanding, and expression.",
+      image: "https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=800&h=900&fit=crop&auto=format",
     },
     {
-      icon: "🎤",
+      icon: Mic2,
       title: "Vocals",
       desc: "Vocal training focused on pitch accuracy, breath control, tone development, and confident performance.",
+      image: "https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800&h=900&fit=crop&auto=format",
     },
     {
-      icon: "🥁",
+      icon: Drum,
       title: "Drums",
       desc: "Rhythm-based training emphasising timing, coordination, groove, and ensemble playing.",
+      image: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=900&fit=crop&auto=format",
     },
     {
-      icon: "📖",
+      icon: BookOpen,
       title: "Music Theory",
       desc: "Practical theory lessons to strengthen understanding, reading skills, and overall musical maturity.",
+      image: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=800&h=900&fit=crop&auto=format",
     },
   ];
 
@@ -234,9 +292,31 @@ export default function Home() {
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section
         id="home"
+        ref={heroRef}
         className="relative min-h-screen flex items-center justify-center px-6 pt-24 overflow-hidden"
         style={{ background: "#07090E" }}
       >
+        {/* Background photo */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{ scale: heroBgScale, opacity: heroBgOpacity }}
+        >
+          <img
+            src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1600&h=1200&fit=crop&auto=format"
+            alt=""
+            aria-hidden
+            className="w-full h-full object-cover"
+            style={{ opacity: 0.32, filter: "saturate(0.6)" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 45% 40% at 50% 45%,rgba(7,9,14,0.55) 0%,transparent 100%)",
+            }}
+          />
+        </motion.div>
+
         {/* Subtle radial glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -255,34 +335,22 @@ export default function Home() {
           }}
         />
 
-        
+
 
         <motion.div
           className="relative z-10 flex flex-col items-center text-center gap-6 max-w-3xl"
           initial="hidden"
           animate="show"
           variants={{ show: { transition: { staggerChildren: 0.12 } } }}
+          style={{ y: heroContentY }}
         >
           <motion.img
             variants={fadeUp}
             src={logo}
             alt="Jubal Music Academy"
-            className="w-28 md:w-36"
+            className="w-36 md:w-48"
             style={{ filter: "drop-shadow(0 0 24px rgba(245,196,81,0.25))" }}
           />
-
-          <motion.div variants={fadeUp}>
-            <span
-              className="inline-block px-4 py-1.5 text-xs font-bold tracking-widest uppercase rounded-full mb-4"
-              style={{
-                background: "rgba(245,196,81,0.1)",
-                border: "1px solid rgba(245,196,81,0.25)",
-                color: "#F5C451",
-              }}
-            >
-              Structured · Purposeful · Long-term
-            </span>
-          </motion.div>
 
           <motion.h1
             variants={fadeUp}
@@ -370,14 +438,31 @@ export default function Home() {
       {/* ── STATS BAR ────────────────────────────────────────── */}
       {/* ── WHY CHOOSE JMA ───────────────────────────────────── */}
       <section
-        className="py-20 px-6"
+        className="relative py-20 px-6 overflow-hidden"
         style={{
           background: "#0B0F16",
           borderTop: "1px solid rgba(245,196,81,0.08)",
           borderBottom: "1px solid rgba(245,196,81,0.08)",
         }}
       >
-        <div className="max-w-6xl mx-auto">
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.img
+            src="https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=1600&h=900&fit=crop&auto=format"
+            alt=""
+            aria-hidden
+            className="w-full h-full object-cover"
+            style={{ filter: "saturate(0.5)" }}
+            initial={{ opacity: 0, scale: 1.15 }}
+            whileInView={{ opacity: 0.16, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 1.6, ease: "easeOut" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 50% 45% at 50% 40%,rgba(11,15,22,0.6) 0%,transparent 100%)" }}
+          />
+        </div>
+        <div className="max-w-6xl mx-auto relative z-10">
 
           <FadeSection className="text-center mb-14">
             <p
@@ -403,7 +488,9 @@ export default function Home() {
                 border: "1px solid rgba(245,196,81,0.12)",
               }}
             >
-              <div className="text-5xl mb-5">⛪</div>
+              <div className="w-14 h-14 mb-5 mx-auto rounded-2xl flex items-center justify-center" style={{ background: "rgba(245,196,81,0.1)", border: "1px solid rgba(245,196,81,0.2)" }}>
+                <Church size={26} color="#F5C451" strokeWidth={1.75} />
+              </div>
 
               <h3 className="text-xl font-bold text-white mb-3">
                 Church Musicianship
@@ -427,7 +514,9 @@ export default function Home() {
                 border: "1px solid rgba(245,196,81,0.12)",
               }}
             >
-              <div className="text-5xl mb-5">🎓</div>
+              <div className="w-14 h-14 mb-5 mx-auto rounded-2xl flex items-center justify-center" style={{ background: "rgba(245,196,81,0.1)", border: "1px solid rgba(245,196,81,0.2)" }}>
+                <GraduationCap size={26} color="#F5C451" strokeWidth={1.75} />
+              </div>
 
               <h3 className="text-xl font-bold text-white mb-3">
                 Trinity & Rockschool
@@ -451,7 +540,9 @@ export default function Home() {
                 border: "1px solid rgba(245,196,81,0.12)",
               }}
             >
-              <div className="text-5xl mb-5">🎹</div>
+              <div className="w-14 h-14 mb-5 mx-auto rounded-2xl flex items-center justify-center" style={{ background: "rgba(245,196,81,0.1)", border: "1px solid rgba(245,196,81,0.2)" }}>
+                <Layers size={26} color="#F5C451" strokeWidth={1.75} />
+              </div>
 
               <h3 className="text-xl font-bold text-white mb-3">
                 Multi-Instrument Academy
@@ -475,7 +566,9 @@ export default function Home() {
                 border: "1px solid rgba(245,196,81,0.12)",
               }}
             >
-              <div className="text-5xl mb-5">👨‍🏫</div>
+              <div className="w-14 h-14 mb-5 mx-auto rounded-2xl flex items-center justify-center" style={{ background: "rgba(245,196,81,0.1)", border: "1px solid rgba(245,196,81,0.2)" }}>
+                <Presentation size={26} color="#F5C451" strokeWidth={1.75} />
+              </div>
 
               <h3 className="text-xl font-bold text-white mb-3">
                 Mentor-Led Learning
@@ -496,8 +589,25 @@ export default function Home() {
       </section>
 
       {/* ── ABOUT ────────────────────────────────────────────── */}
-      <section id="about" className="py-28 px-6" style={{ background: "#07090E" }}>
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+      <section id="about" className="relative py-28 px-6 overflow-hidden" style={{ background: "#07090E" }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.img
+            src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1600&h=900&fit=crop&auto=format"
+            alt=""
+            aria-hidden
+            className="w-full h-full object-cover"
+            style={{ filter: "saturate(0.55)" }}
+            initial={{ opacity: 0, scale: 1.15 }}
+            whileInView={{ opacity: 0.18, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 1.6, ease: "easeOut" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 50% 45% at 50% 45%,rgba(7,9,14,0.65) 0%,transparent 100%)" }}
+          />
+        </div>
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center relative z-10">
           <FadeSection>
             <p
               className="text-xs font-bold tracking-widest uppercase mb-4"
@@ -530,11 +640,11 @@ export default function Home() {
           <FadeSection>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { icon: "🎹", text: "Keyboard · Guitar · Piano · Vocals · Drums" },
-                { icon: "⛪", text: "Dedicated programs for church musicians" },
-                { icon: "📈", text: "Clear learning paths, not random lessons" },
-                { icon: "🤝", text: "Mentorship-driven, student-first approach" },
-              ].map(({ icon, text }) => (
+                { icon: Music3, text: "Keyboard · Guitar · Piano · Vocals · Drums" },
+                { icon: Church, text: "Dedicated programs for church musicians" },
+                { icon: TrendingUp, text: "Clear learning paths, not random lessons" },
+                { icon: HeartHandshake, text: "Mentorship-driven, student-first approach" },
+              ].map(({ icon: Icon, text }) => (
                 <motion.div
                   key={text}
                   whileHover={{ y: -2 }}
@@ -545,7 +655,9 @@ export default function Home() {
                     color: "#B8C1CC",
                   }}
                 >
-                  <span className="text-2xl block mb-3">{icon}</span>
+                  <span className="w-10 h-10 mb-3 rounded-xl flex items-center justify-center" style={{ background: "rgba(245,196,81,0.1)" }}>
+                    <Icon size={19} color="#F5C451" strokeWidth={1.75} />
+                  </span>
                   {text}
                 </motion.div>
               ))}
@@ -556,13 +668,30 @@ export default function Home() {
 
       {/* ── TRANSFORMATION PILLARS ───────────────────────────── */}
       <section
-        className="py-20 px-6"
+        className="relative py-20 px-6 overflow-hidden"
         style={{
           background: "#0B0F16",
           borderTop: "1px solid rgba(245,196,81,0.06)",
         }}
       >
-        <div className="max-w-5xl mx-auto">
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.img
+            src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1600&h=900&fit=crop&auto=format"
+            alt=""
+            aria-hidden
+            className="w-full h-full object-cover"
+            style={{ filter: "saturate(0.5)" }}
+            initial={{ opacity: 0, scale: 1.15 }}
+            whileInView={{ opacity: 0.2, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 1.6, ease: "easeOut" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 50% 45% at 50% 40%,rgba(11,15,22,0.65) 0%,transparent 100%)" }}
+          />
+        </div>
+        <div className="max-w-5xl mx-auto relative z-10">
           <FadeSection className="text-center mb-14">
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#F5C451" }}>
               What you gain
@@ -684,8 +813,25 @@ export default function Home() {
       </section>
 
       {/* ── PROGRAMS GRID ────────────────────────────────────── */}
-      <section id="programs" className="py-28 px-6" style={{ background: "#07090E" }}>
-        <div className="max-w-6xl mx-auto">
+      <section id="programs" className="relative py-28 px-6 overflow-hidden" style={{ background: "#07090E" }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.img
+            src="https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=1600&h=900&fit=crop&auto=format"
+            alt=""
+            aria-hidden
+            className="w-full h-full object-cover"
+            style={{ filter: "saturate(0.5)" }}
+            initial={{ opacity: 0, scale: 1.15 }}
+            whileInView={{ opacity: 0.15, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 1.6, ease: "easeOut" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 50% 40% at 50% 35%,rgba(7,9,14,0.65) 0%,transparent 100%)" }}
+          />
+        </div>
+        <div className="max-w-6xl mx-auto relative z-10">
           <FadeSection className="text-center mb-16">
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#F5C451" }}>
               What we teach
@@ -719,12 +865,32 @@ export default function Home() {
           {/* ── WORSHIP KEYS PROGRAM ─────────────────────────── */}
           <FadeSection className="mt-24">
             <div
-              className="rounded-3xl p-10 md:p-14"
+              className="rounded-3xl overflow-hidden cursor-pointer group"
               style={{
                 background: "linear-gradient(135deg,#0C1220,#0F1828)",
                 border: "1px solid rgba(245,196,81,0.15)",
               }}
+              onClick={() => navigate("/programs/worship-keys")}
             >
+              <div className="relative h-56 md:h-72 overflow-hidden">
+                <motion.img
+                  src="https://images.unsplash.com/photo-1552422535-c45813c61732?w=1400&h=600&fit=crop&auto=format"
+                  alt="Playing worship keys on a piano"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: "linear-gradient(0deg,#0C1220 0%,rgba(12,18,32,0.4) 55%,rgba(12,18,32,0.15) 100%)",
+                  }}
+                />
+              </div>
+
+              <div className="p-10 md:p-14 pt-8 md:pt-10">
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div>
                   <span
@@ -788,6 +954,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+              </div>
             </div>
           </FadeSection>
         </div>
@@ -798,26 +965,29 @@ export default function Home() {
         <div className="max-w-5xl mx-auto">
           <FadeSection>
             <div
-              className="relative rounded-3xl overflow-hidden"
+              className="relative rounded-3xl overflow-hidden cursor-pointer group"
               style={{
                 background: "linear-gradient(135deg,#0B0F14,#111820)",
                 border: "1px solid rgba(245,196,81,0.2)",
               }}
+              onClick={() => navigate("/programs/worship-keys-challenge")}
             >
               {/* Piano photo */}
               <div className="absolute inset-0">
-                <img
+                <motion.img
                   src="https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=1200&h=500&fit=crop&crop=center&auto=format"
-                  alt=""
-                  aria-hidden
-                  className="w-full h-full object-cover"
-                  style={{ opacity: 0.15, filter: "saturate(0.3)" }}
+                  alt="Worship Keys 3-Day Challenge — piano keys"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 0.55 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
                 />
                 <div
                   className="absolute inset-0"
                   style={{
                     background:
-                      "linear-gradient(90deg,rgba(7,9,14,0.97) 45%,rgba(7,9,14,0.6))",
+                      "linear-gradient(90deg,rgba(7,9,14,0.97) 40%,rgba(7,9,14,0.55) 70%,rgba(7,9,14,0.25) 100%)",
                   }}
                 />
               </div>
@@ -882,19 +1052,19 @@ export default function Home() {
 
                   <div className="grid grid-cols-2 gap-4">
                     {[
-                      ["₹", "Only ₹249"],
-                      ["🎬", "2 Recorded Sessions"],
-                      ["🔴", "1 LIVE Session"],
-                      ["📖", "FREE eBook ₹999"],
-                      ["✅", "Beginner Friendly"],
-                      ["🏆", "Certificate Included"],
-                    ].map(([icon, label]) => (
+                      [IndianRupee, "Only ₹249"],
+                      [Video, "2 Recorded Sessions"],
+                      [Radio, "1 LIVE Session"],
+                      [BookOpen, "FREE eBook ₹999"],
+                      [CheckCircle2, "Beginner Friendly"],
+                      [Trophy, "Certificate Included"],
+                    ].map(([Icon, label]) => (
                       <div
                         key={label}
                         className="flex items-center gap-2.5 text-sm"
                         style={{ color: "#B8C1CC" }}
                       >
-                        <span className="text-base">{icon}</span>
+                        <Icon size={16} color="#F5C451" strokeWidth={2} />
                         {label}
                       </div>
                     ))}
@@ -984,6 +1154,23 @@ export default function Home() {
         className="relative py-28 px-6 overflow-hidden"
         style={{ background: "#07090E" }}
       >
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.img
+            src="https://images.unsplash.com/photo-1445985543470-41fba5c3144a?w=1600&h=900&fit=crop&auto=format"
+            alt=""
+            aria-hidden
+            className="w-full h-full object-cover"
+            style={{ filter: "saturate(0.5)" }}
+            initial={{ opacity: 0, scale: 1.15 }}
+            whileInView={{ opacity: 0.16, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 1.6, ease: "easeOut" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 55% 50% at 50% 40%,rgba(7,9,14,0.65) 0%,transparent 100%)" }}
+          />
+        </div>
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -1002,7 +1189,9 @@ export default function Home() {
             Experience the JMA teaching approach firsthand — no commitment required.
           </p>
         </div>
-        <DemoForm />
+        <div className="relative z-10">
+          <DemoForm />
+        </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────── */}

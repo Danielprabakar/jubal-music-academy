@@ -207,7 +207,6 @@ export default function WorshipKeys() {
         </div>
       </section>
 
-
       {/* ── PROGRAM PATH ────────────────────────────────────────────────────── */}
       <section
         className="py-28 px-6"
