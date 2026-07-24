@@ -5,6 +5,8 @@ import WorshipKeys from "./pages/WorshipKeys";
 import WorshipKeysEnroll from "./pages/WorshipKeysEnroll";
 import ThankYou from "./pages/ThankYou";
 import WorshipKeysChallenge from "./pages/WorshipKeysChallenge";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {
@@ -39,6 +41,10 @@ export default function App() {
           path="/programs/worship-keys-challenge"
           element={<WorshipKeysChallenge />}
         />
+
+        {/* Legal */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
       </Routes>
     </>
   );

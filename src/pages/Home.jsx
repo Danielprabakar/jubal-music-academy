@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Reveal from "../components/Reveal";
 import DemoForm from "../components/DemoForm";
@@ -1004,6 +1004,29 @@ export default function Home() {
         </div>
         <DemoForm />
       </section>
+
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <footer
+        className="py-10 px-6"
+        style={{ background: "#0B0F16", borderTop: "1px solid rgba(245,196,81,0.08)" }}
+      >
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <img src={logo} alt="Jubal Music Academy" className="h-8 w-auto object-contain" />
+            <span className="text-sm text-[#6B7280]">
+              © {new Date().getFullYear()} Jubal Music Academy. All rights reserved.
+            </span>
+          </div>
+          <div className="flex items-center gap-6 text-sm">
+            <Link to="/privacy-policy" className="text-[#6B7280] hover:text-[#F5C451] transition-colors">
+              Privacy Policy
+            </Link>
+            <Link to="/terms-of-service" className="text-[#6B7280] hover:text-[#F5C451] transition-colors">
+              Terms of Service
+            </Link>
+          </div>
+        </div>
+      </footer>
 
       <WhatsAppFloat />
     </div>
