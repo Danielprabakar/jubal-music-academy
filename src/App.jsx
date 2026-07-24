@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import WorshipKeys from "./pages/WorshipKeys";
 import WorshipKeysEnroll from "./pages/WorshipKeysEnroll";
 import ThankYou from "./pages/ThankYou";
+import WorshipKeysChallenge from "./pages/WorshipKeysChallenge";
 import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {
@@ -31,6 +32,12 @@ export default function App() {
         <Route
           path="/programs/worship-keys/thank-you"
           element={<ThankYou />}
+        />
+
+        {/* Worship Keys Challenge */}
+        <Route
+          path="/programs/worship-keys-challenge"
+          element={<WorshipKeysChallenge />}
         />
       </Routes>
     </>

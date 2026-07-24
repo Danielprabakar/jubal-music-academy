@@ -8,15 +8,23 @@ const INSTAGRAM_EMBEDS = [
 
 export default function InstagramSection() {
   useEffect(() => {
-    // Load Instagram embed script ONCE
-    if (!window.instgrm) {
-      const script = document.createElement("script");
-      script.src = "https://www.instagram.com/embed.js";
-      script.async = true;
-      document.body.appendChild(script);
-    } else {
+    if (window.instgrm) {
       window.instgrm.Embeds.process();
+      return;
     }
+
+    const existing = document.getElementById("instagram-embed-script");
+    if (existing) {
+      existing.addEventListener("load", () => window.instgrm?.Embeds.process());
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = "instagram-embed-script";
+    script.src = "https://www.instagram.com/embed.js";
+    script.async = true;
+    script.onload = () => window.instgrm?.Embeds.process();
+    document.body.appendChild(script);
   }, []);
 
   return (
@@ -32,10 +40,10 @@ export default function InstagramSection() {
         </p>
 
         <div className="grid md:grid-cols-3 gap-8">
-  {INSTAGRAM_EMBEDS.map((embed, index) => (
-    <div
-      key={index}
-      className="
+          {INSTAGRAM_EMBEDS.map((embed, index) => (
+            <div
+              key={index}
+              className="
         bg-[#111] 
         border border-gray-800 
         rounded-xl 
@@ -44,48 +52,43 @@ export default function InstagramSection() {
         hover:border-gold
         transition
       "
-    >
-      <div
-        className="overflow-hidden rounded-md bg-white"
-        dangerouslySetInnerHTML={{ __html: embed }}
-      />
-    </div>
-  ))}
-</div>
+            >
+              <div
+                className="overflow-hidden rounded-md bg-white"
+                dangerouslySetInnerHTML={{ __html: embed }}
+              />
+            </div>
+          ))}
+        </div>
 
         {/* FOLLOW CTA */}
         <div className="mt-12">
           <a
-  href="https://www.instagram.com/jubalmusiconline/"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="
-    inline-flex items-center gap-3
-    text-gold hover:text-white
-    transition
-  "
-  group inline-flex items-center
->
-  {/* Instagram Icon */}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-5 h-5"
-    aria-hidden="true"
-    
-  >
-    <path d="M7.75 2h8.5C19.99 2 22 4.01 22 6.25v8.5C22 19.99 19.99 22 17.75 22h-8.5C4.01 22 2 19.99 2 17.75v-8.5C2 4.01 4.01 2 6.25 2zm0 1.5C4.84 3.5 3.5 4.84 3.5 6.25v8.5c0 1.41 1.34 2.75 2.75 2.75h8.5c1.41 0 2.75-1.34 2.75-2.75v-8.5c0-1.41-1.34-2.75-2.75-2.75h-8.5z" />
-    <path d="M12 7a5 5 0 100 10 5 5 0 000-10zm0 1.5a3.5 3.5 0 110 7 3.5 3.5 0 010-7z" />
-    <circle cx="17.25" cy="6.75" r="1.25" />
-    group-hover:scale-110 transition-transform
-  </svg>
+            href="https://www.instagram.com/jubalmusiconline/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-3 text-gold hover:text-white transition"
+          >
+            {/* Instagram Icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-5 h-5 transition-transform group-hover:scale-110"
+              aria-hidden="true"
 
-  <span>
-    Follow us on Instagram
-    <span className="ml-1 font-medium">@jubalmusiconline</span>
-  </span>
-</a>
+            >
+              <path d="M7.75 2h8.5C19.99 2 22 4.01 22 6.25v8.5C22 19.99 19.99 22 17.75 22h-8.5C4.01 22 2 19.99 2 17.75v-8.5C2 4.01 4.01 2 6.25 2zm0 1.5C4.84 3.5 3.5 4.84 3.5 6.25v8.5c0 1.41 1.34 2.75 2.75 2.75h8.5c1.41 0 2.75-1.34 2.75-2.75v-8.5c0-1.41-1.34-2.75-2.75-2.75h-8.5z" />
+              <path d="M12 7a5 5 0 100 10 5 5 0 000-10zm0 1.5a3.5 3.5 0 110 7 3.5 3.5 0 010-7z" />
+              <circle cx="17.25" cy="6.75" r="1.25" />
+              group-hover:scale-110 transition-transform
+            </svg>
+
+            <span>
+              Follow us on Instagram
+              <span className="ml-1 font-medium">@jubalmusiconline</span>
+            </span>
+          </a>
         </div>
       </div>
     </section>
