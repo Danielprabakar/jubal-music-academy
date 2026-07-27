@@ -452,10 +452,10 @@ export default function Home() {
             aria-hidden
             className="w-full h-full object-cover"
             style={{ filter: "saturate(0.5)" }}
-            initial={{ opacity: 0, scale: 1.15 }}
-            whileInView={{ opacity: 0.16, scale: 1 }}
+            initial={{ opacity: 0, x: -90 }}
+            whileInView={{ opacity: 0.16, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 1.6, ease: "easeOut" }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
           />
           <div
             className="absolute inset-0"
@@ -597,10 +597,10 @@ export default function Home() {
             aria-hidden
             className="w-full h-full object-cover"
             style={{ filter: "saturate(0.55)" }}
-            initial={{ opacity: 0, scale: 1.15 }}
-            whileInView={{ opacity: 0.18, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.75, rotate: -9 }}
+            whileInView={{ opacity: 0.18, scale: 1, rotate: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 1.6, ease: "easeOut" }}
+            transition={{ duration: 1.2, ease: [0.34, 1.56, 0.64, 1] }}
           />
           <div
             className="absolute inset-0"
@@ -681,10 +681,10 @@ export default function Home() {
             aria-hidden
             className="w-full h-full object-cover"
             style={{ filter: "saturate(0.5)" }}
-            initial={{ opacity: 0, scale: 1.15 }}
-            whileInView={{ opacity: 0.2, scale: 1 }}
+            initial={{ opacity: 0, y: 90, scale: 0.94 }}
+            whileInView={{ opacity: 0.2, y: 0, scale: 1 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 1.6, ease: "easeOut" }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
           />
           <div
             className="absolute inset-0"
@@ -814,17 +814,17 @@ export default function Home() {
 
       {/* ── PROGRAMS GRID ────────────────────────────────────── */}
       <section id="programs" className="relative py-28 px-6 overflow-hidden" style={{ background: "#07090E" }}>
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none" style={{ perspective: 1200 }}>
           <motion.img
             src="https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=1600&h=900&fit=crop&auto=format"
             alt=""
             aria-hidden
             className="w-full h-full object-cover"
             style={{ filter: "saturate(0.5)" }}
-            initial={{ opacity: 0, scale: 1.15 }}
-            whileInView={{ opacity: 0.15, scale: 1 }}
+            initial={{ opacity: 0, rotateY: 55, x: 70 }}
+            whileInView={{ opacity: 0.15, rotateY: 0, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 1.6, ease: "easeOut" }}
+            transition={{ duration: 1, ease: "easeOut" }}
           />
           <div
             className="absolute inset-0"
@@ -1161,10 +1161,10 @@ export default function Home() {
             aria-hidden
             className="w-full h-full object-cover"
             style={{ filter: "saturate(0.5)" }}
-            initial={{ opacity: 0, scale: 1.15 }}
-            whileInView={{ opacity: 0.16, scale: 1 }}
+            initial={{ opacity: 0, x: 90 }}
+            whileInView={{ opacity: 0.16, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 1.6, ease: "easeOut" }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
           />
           <div
             className="absolute inset-0"
