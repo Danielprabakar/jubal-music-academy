@@ -180,20 +180,47 @@ function BatchCountdown({ onRegister }) {
   const [batchDates, setBatchDates] = useState({ thu: "", fri: "", sat: "" });
 
   useEffect(() => {
-    function getNextThursdayUTC() {
-      const now = new Date();
-      const istNow = new Date(now.getTime() + 5.5 * 3600000);
-      const day = istNow.getUTCDay();
-      const h = istNow.getUTCHours();
-      let daysToThursday = (4 - day + 7) % 7;
-      if (daysToThursday === 0 && h >= 9) daysToThursday = 7;
-      if (day === 5 || day === 6) daysToThursday = (4 - day + 7) % 7 || 7;
-      const target = new Date(istNow);
-      target.setUTCDate(istNow.getUTCDate() + daysToThursday);
-      target.setUTCHours(9, 0, 0, 0);
-      return new Date(target.getTime() - 5.5 * 3600000);
+    // Batches are paused until September 2026, then resume running only
+    // in the 1st and 3rd week of every month (Thu-Fri-Sat, Day 1 at
+    // 9AM IST) — not every week.
+    const SCHEDULE_RESUME_YEAR = 2026;
+    const SCHEDULE_RESUME_MONTH = 8; // 0-based: 8 = September
+
+    // Returns the real UTC instant for 9:00 AM IST on the Nth Thursday
+    // (n=1 or 3) of the given IST calendar year/month (month is 0-based).
+    function getNthThursdayBatchStart(year, month, n) {
+      const firstOfMonth = new Date(Date.UTC(year, month, 1));
+      const firstDayOfWeek = firstOfMonth.getUTCDay(); // day-of-week is timezone-invariant for a given calendar date
+      const offsetToThursday = (4 - firstDayOfWeek + 7) % 7;
+      const thursdayDateNum = 1 + offsetToThursday + (n - 1) * 7;
+      const istTarget = new Date(Date.UTC(year, month, thursdayDateNum, 9, 0, 0));
+      return new Date(istTarget.getTime() - 5.5 * 3600000);
     }
-    const target = getNextThursdayUTC();
+
+    // Walk forward month by month from the resume month, picking the
+    // earliest 1st/3rd-Thursday batch start that hasn't happened yet.
+    function getNextBatchStartUTC() {
+      const now = new Date();
+      let year = SCHEDULE_RESUME_YEAR;
+      let month = SCHEDULE_RESUME_MONTH;
+
+      for (let i = 0; i < 24; i++) {
+        const candidates = [
+          getNthThursdayBatchStart(year, month, 1),
+          getNthThursdayBatchStart(year, month, 3),
+        ].sort((a, b) => a - b);
+
+        for (const candidate of candidates) {
+          if (candidate.getTime() > now.getTime()) return candidate;
+        }
+
+        month += 1;
+        if (month > 11) { month = 0; year += 1; }
+      }
+      return getNthThursdayBatchStart(year, month, 1); // 24-month safety fallback
+    }
+
+    const target = getNextBatchStartUTC();
     const thu = new Date(target);
     const fri = new Date(target); fri.setUTCDate(fri.getUTCDate() + 1);
     const sat = new Date(target); sat.setUTCDate(sat.getUTCDate() + 2);
@@ -233,7 +260,7 @@ function BatchCountdown({ onRegister }) {
             Next Batch Enrolling Now
           </span>
           <h2 className="text-2xl md:text-3xl font-extrabold text-white mt-2" style={{ fontFamily: "'Manrope',sans-serif" }}>
-            Next Batch Starts <AmberText>This Thursday at 9AM IST</AmberText>
+            Next Batch Starts <AmberText>{batchDates.thu ? `${batchDates.thu} at 9AM IST` : "Soon"}</AmberText>
           </h2>
         </div>
         <div className="flex items-center justify-center gap-4 md:gap-8 mb-10">
