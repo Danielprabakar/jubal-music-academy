@@ -135,6 +135,8 @@ function FaqItem({ q, a, isOpen, onToggle }) {
 }
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1552422535-c45813c61732?w=1600&h=1000&fit=crop&auto=format";
+const ACTUAL_FEE = "₹32,000";
+const OFFER_FEE = "₹22,500";
 
 export default function WorshipKeys() {
   const navigate = useNavigate();
@@ -299,8 +301,13 @@ export default function WorshipKeys() {
           </Reveal>
 
           <Reveal delay={240}>
+            <p className="mb-4">
+              <span className="text-lg line-through mr-2" style={{ color: "#6B7280" }}>{ACTUAL_FEE}</span>
+              <span className="text-2xl font-extrabold" style={{ color: GOLD }}>{OFFER_FEE}</span>
+              <span className="text-sm ml-2" style={{ color: "#6B7280" }}>for 9 Months</span>
+            </p>
             <PrimaryCTA large onClick={handleEnrollClick}>
-              Enroll Now — ₹23,999 for 9 Months
+              Enroll Now — {OFFER_FEE}
               <ArrowRight size={18} />
             </PrimaryCTA>
             <p className="text-sm mt-6" style={{ color: "#6B7280" }}>
@@ -498,7 +505,10 @@ export default function WorshipKeys() {
         <div className="bg-[#0B0F14] border-t border-[#1f2a37] px-4 py-3">
           <div className="max-w-md mx-auto flex items-center justify-between gap-3">
             <div className="text-sm">
-              <p className="text-white font-semibold leading-tight">₹23,999</p>
+              <p className="text-white font-semibold leading-tight">
+                <span className="line-through text-xs text-[#6B7280] mr-1">{ACTUAL_FEE}</span>
+                {OFFER_FEE}
+              </p>
               <p className="text-xs text-[#B8C1CC]">9-Month Batch</p>
             </div>
             <PrimaryCTA onClick={handleEnrollClick}>Enroll Now</PrimaryCTA>
@@ -636,7 +646,7 @@ export default function WorshipKeys() {
                 <div className="mt-10 rounded-2xl p-6" style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)" }}>
                   <p className="text-base leading-8" style={{ color: "#D1D5DB" }}>
                     After a brief feedback conversation, we'll process a
-                    <span className="font-bold text-white"> 100% refund of your ₹23,999 course fee.</span>
+                    <span className="font-bold text-white"> 100% refund of your {OFFER_FEE} course fee.</span>
                     <br />
                     <span className="font-semibold" style={{ color: "#22C55E" }}>
                       No complicated process. No hidden conditions.
@@ -762,7 +772,7 @@ export default function WorshipKeys() {
             Seats are limited. Secure your place now.
           </p>
           <PrimaryCTA large onClick={handleEnrollClick}>
-            Secure Your Seat — Enroll Now @ ₹23,999
+            Secure Your Seat — Enroll Now @ {OFFER_FEE}
             <ArrowRight size={18} />
           </PrimaryCTA>
         </motion.div>

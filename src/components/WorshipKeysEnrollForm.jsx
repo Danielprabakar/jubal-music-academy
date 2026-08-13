@@ -3,7 +3,9 @@ import { useState } from "react";
 const SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbw3bwkyLQZhrDFXKauBxeykvR_Efc57cLdhJsbHJ6LmFwPnieTEUR5TD0ae6XooV4YR/exec";
 
-const RAZORPAY_LINK = "https://rzp.io/rzp/HhaSsuQ6";
+const RAZORPAY_LINK = "https://rzp.io/rzp/wkfound";
+const ACTUAL_FEE = "₹32,000";
+const OFFER_FEE = "₹22,500";
 
 export default function WorshipKeysEnrollForm() {
   const [loading, setLoading] = useState(false);
@@ -54,7 +56,7 @@ export default function WorshipKeysEnrollForm() {
         <p className="text-[#B8C1CC]">
           Your details have been received.
           <br />
-          Please complete the payment to confirm your seat.
+          Please complete the payment of <strong className="text-white">{OFFER_FEE}</strong> to confirm your seat.
         </p>
       </div>
     );
@@ -65,6 +67,12 @@ export default function WorshipKeysEnrollForm() {
       onSubmit={handleSubmit}
       className="max-w-xl mx-auto space-y-4"
     >
+      <div className="text-center mb-2">
+        <span className="text-lg line-through text-[#6B7280] mr-2">{ACTUAL_FEE}</span>
+        <span className="text-2xl font-bold text-[#F5C451]">{OFFER_FEE}</span>
+        <p className="text-xs text-[#B8C1CC] mt-1">Limited-time offer · 9-Month Batch</p>
+      </div>
+
       <input
         name="name"
         required
@@ -91,7 +99,7 @@ export default function WorshipKeysEnrollForm() {
         disabled={loading}
         className="w-full bg-[#F5C451] text-black py-3 font-bold rounded"
       >
-        {loading ? "Submitting..." : "Proceed to Payment"}
+        {loading ? "Submitting..." : `Proceed to Payment — ${OFFER_FEE}`}
       </button>
     </form>
   );
