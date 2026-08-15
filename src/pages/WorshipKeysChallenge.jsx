@@ -9,6 +9,7 @@ import {
 import Daniel from "../assets/Daniel.jpg";
 import Logo from "../assets/jma-logo.png";
 import { callBackend, BackendError } from "../lib/appsScript";
+import { loadMetaPixel, trackPixelEvent } from "../lib/metaPixel";
 
 const WEBSITE = "https://www.jubalmusicacademy.com";
 
@@ -340,6 +341,11 @@ function RegistrationModal({ onClose }) {
       handler: () => setPhase("awaiting-confirmation"),
       modal: { ondismiss: () => setPhase("dismissed") },
     });
+    trackPixelEvent("InitiateCheckout", {
+      content_name: "Worship Keys Challenge",
+      currency: order.currency,
+      value: order.amount / 100,
+    });
     rzp.open();
   };
 
@@ -353,6 +359,7 @@ function RegistrationModal({ onClose }) {
         expectations: form.expectations, referral: form.referral,
       });
       setRegistrationId(regId);
+      trackPixelEvent("Lead", { content_name: "Worship Keys Challenge Registration" });
       const order = await callBackend("createOrder", { registrationId: regId });
       openCheckout(order);
     } catch (err) {
@@ -576,8 +583,6 @@ function SuccessPage({ registrationId }) {
 // ─── Main Page Component ──────────────────────────────────────────────────────
 export default function WorshipKeysChallenge() {
   const [searchParams] = useSearchParams();
-  if (searchParams.get("payment") === "success")
-    return <SuccessPage registrationId={searchParams.get("registrationId")} />;
 
   const [scrolled, setScrolled] = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
@@ -585,6 +590,10 @@ export default function WorshipKeysChallenge() {
   const [openFaq, setOpenFaq] = useState(null);
   const statsRef = useRef(null);
   const [statsActive, setStatsActive] = useState(false);
+
+  // Meta Pixel is scoped to this page only (not site-wide in index.html) —
+  // loads here and fires PageView on mount.
+  useEffect(() => { loadMetaPixel(); }, []);
 
   useEffect(() => {
     const h = () => {
@@ -660,6 +669,12 @@ export default function WorshipKeysChallenge() {
     { q: "How do I attend the live sessions?", a: "Sessions are conducted live online via Zoom. You'll receive the meeting link immediately after registration confirmation." },
     { q: "What if I miss a live session?", a: "No problem. All sessions are recorded and you'll have lifetime access to the replays. We still encourage attending live for the Q&A and real-time feedback." },
   ];
+
+  // Checked after all hooks above have run (React requires hooks to run in
+  // the same order every render) — this can't be an early return any higher
+  // up without skipping hooks on the success-redirect path.
+  if (searchParams.get("payment") === "success")
+    return <SuccessPage registrationId={searchParams.get("registrationId")} />;
 
   return (
     <>
