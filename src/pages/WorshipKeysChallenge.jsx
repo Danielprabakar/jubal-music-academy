@@ -664,11 +664,7 @@ export default function WorshipKeysChallenge() {
   ];
 
   const bonuses = [
-    { icon: <FileText size={22} />, title: "PDF Chord Charts", desc: "Printable charts for all major worship progressions in every key" },
-    { icon: <Headphones size={22} />, title: "Practice Backing Tracks", desc: "12 professionally produced tracks to practise along with daily" },
     { icon: <Download size={22} />, title: "Complete Session Notes", desc: "Comprehensive PDF notes from all 3 days — yours to keep forever" },
-    { icon: <Video size={22} />, title: "Lifetime Replay Access", desc: "Rewatch every session as many times as you need, with no expiry" },
-    { icon: <Award size={22} />, title: "Completion Certificate", desc: "Official digital certificate to mark your achievement" },
     { icon: <Users size={22} />, title: "Private Community", desc: "Lifetime access to our exclusive worship musicians community" },
   ];
 
@@ -681,12 +677,12 @@ export default function WorshipKeysChallenge() {
   const faqs = [
     { q: "Who is this workshop designed for?", a: "Church keyboard players, worship team musicians, beginners, and intermediate pianists who want to play worship songs confidently without depending entirely on sheet music or YouTube tutorials." },
     { q: "Do I need a keyboard to participate?", a: "Yes, a basic 5-octave keyboard or piano is recommended. Even an entry-level digital keyboard is perfectly sufficient." },
-    { q: "Will session recordings be available?", a: "Yes. All registered students receive lifetime access to full session recordings so you can rewatch and review at your own pace." },
-    { q: "Will I have access to the materials after the 3 days?", a: "Yes — lifetime access to all session videos, plus you'll be invited to our private WhatsApp community for ongoing support and future updates." },
+    { q: "Will session recordings be available?", a: "Yes. Session recordings are available to rewatch for 7 days, so you can review and catch up at your own pace within that window." },
+    { q: "Will I have access to the materials after the 3 days?", a: "Your session notes are yours to keep permanently, and you'll be invited to our private WhatsApp community for ongoing support. Session video replays remain available for 7 days after each session." },
     { q: "Can absolute beginners join?", a: "Absolutely. Day 1 begins from keyboard orientation and understanding notes — the very basics. No prior theory knowledge is required." },
-    { q: "Will I receive notes and materials?", a: "Yes — comprehensive PDF notes, chord charts for every key, and 12 practice backing tracks are all included in your ₹249 enrollment." },
+    { q: "Will I receive notes and materials?", a: "Yes — comprehensive PDF notes from all 3 days are included in your ₹249 enrollment, yours to keep permanently." },
     { q: "How do I attend the live sessions?", a: "Sessions are conducted live online via Zoom. You'll receive the meeting link immediately after registration confirmation." },
-    { q: "What if I miss a live session?", a: "No problem. All sessions are recorded and you'll have lifetime access to the replays. We still encourage attending live for the Q&A and real-time feedback." },
+    { q: "What if I miss a live session?", a: "No problem. Sessions are recorded and the replay stays available for 7 days afterward. We still encourage attending live for the Q&A and real-time feedback." },
   ];
 
   // Checked after all hooks above have run (React requires hooks to run in
@@ -775,7 +771,7 @@ export default function WorshipKeysChallenge() {
                 <SecondaryBtn onClick={() => document.getElementById("curriculum")?.scrollIntoView({ behavior: "smooth" })}><Play size={14} /> View Curriculum</SecondaryBtn>
               </div>
               <div className="mt-10 grid grid-cols-2 gap-2.5 max-w-sm">
-                {["Beginner Friendly", "Live Online Sessions", "Certificate Included", "Lifetime Community"].map((b) => (
+                {["Beginner Friendly", "Live Online Sessions", "Small Batch Sizes", "Lifetime Community"].map((b) => (
                   <div key={b} className="flex items-center gap-2 text-xs font-medium" style={{ color: TXT }}><CheckCircle size={13} color={A} />{b}</div>
                 ))}
               </div>
@@ -1024,7 +1020,7 @@ export default function WorshipKeysChallenge() {
                   <p className="text-xs mb-6" style={{ color: "#444D60" }}>One-time payment · No hidden charges · No subscription</p>
                   <div className="h-px mb-6" style={{ background: "rgba(245,158,11,0.08)" }} />
                   <div className="space-y-3 mb-8">
-                    {["2 Self-Paced recorded sessions", "1 Live session", "Free Ebook Worth ₹999", "Recording for the 3rd session provided", "Digital Completion Certificate", "Private Community Access", "Direct Q&A with Daniel"].map((item) => (
+                    {["2 Self-Paced recorded sessions", "1 Live session", "Free Ebook Worth ₹999", "7-day session replay access", "Private Community Access", "Direct Q&A with Daniel"].map((item) => (
                       <div key={item} className="flex items-center gap-3 text-sm" style={{ color: TXT }}><CheckCircle size={14} color={A} className="flex-shrink-0" />{item}</div>
                     ))}
                   </div>
@@ -1039,8 +1035,8 @@ export default function WorshipKeysChallenge() {
         {/* BONUSES */}
         <section className="py-28 px-6" style={{ background: BG2 }}>
           <div className="max-w-5xl mx-auto">
-            <Reveal><SectionTitle eyebrow="What's Included" heading={<>Everything You Need to <AmberText>Succeed</AmberText></>} sub="Your ₹249 enrollment unlocks a full resource kit to accelerate your progress." /></Reveal>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <Reveal><SectionTitle eyebrow="What's Included" heading={<>Everything You Need to <AmberText>Succeed</AmberText></>} sub="Your ₹249 enrollment includes these extras alongside the live sessions." /></Reveal>
+            <div className="grid sm:grid-cols-2 gap-5 max-w-xl mx-auto">
               {bonuses.map((b, i) => (
                 <Reveal key={b.title} delay={i * 65}>
                   <div className="ch p-5 rounded-2xl" style={{ background: CARD, border: "1px solid rgba(245,158,11,0.1)" }}>
