@@ -175,58 +175,71 @@ function FormSelect({ label, value, onChange, options }) {
   );
 }
 
+// ─── Batch scheduling ─────────────────────────────────────────────────────────
+// Batches are paused until September 2026, then resume running only in the
+// 1st and 3rd week of every month (Thu-Fri-Sat, Day 1 at 9AM IST) — not every
+// week. Pure/module-level so BatchCountdown and the hero social-proof pill
+// both compute the exact same "next batch" date — never two different dates
+// shown on the same page.
+const SCHEDULE_RESUME_YEAR = 2026;
+const SCHEDULE_RESUME_MONTH = 8; // 0-based: 8 = September
+
+// Returns the real UTC instant for 9:00 AM IST on the Nth Thursday
+// (n=1 or 3) of the given IST calendar year/month (month is 0-based).
+function getNthThursdayBatchStart(year, month, n) {
+  const firstOfMonth = new Date(Date.UTC(year, month, 1));
+  const firstDayOfWeek = firstOfMonth.getUTCDay(); // day-of-week is timezone-invariant for a given calendar date
+  const offsetToThursday = (4 - firstDayOfWeek + 7) % 7;
+  const thursdayDateNum = 1 + offsetToThursday + (n - 1) * 7;
+  const istTarget = new Date(Date.UTC(year, month, thursdayDateNum, 9, 0, 0));
+  return new Date(istTarget.getTime() - 5.5 * 3600000);
+}
+
+// Walk forward month by month from the resume month, picking the earliest
+// 1st/3rd-Thursday batch start that hasn't happened yet.
+function getNextBatchStartUTC() {
+  const now = new Date();
+  let year = SCHEDULE_RESUME_YEAR;
+  let month = SCHEDULE_RESUME_MONTH;
+
+  for (let i = 0; i < 24; i++) {
+    const candidates = [
+      getNthThursdayBatchStart(year, month, 1),
+      getNthThursdayBatchStart(year, month, 3),
+    ].sort((a, b) => a - b);
+
+    for (const candidate of candidates) {
+      if (candidate.getTime() > now.getTime()) return candidate;
+    }
+
+    month += 1;
+    if (month > 11) { month = 0; year += 1; }
+  }
+  return getNthThursdayBatchStart(year, month, 1); // 24-month safety fallback
+}
+
+const fmtBatchDate = (d) => d.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+
+// Computes the next batch's start date once on mount. Used by the hero's
+// social-proof pill so its date can never drift out of sync with the
+// countdown widget below.
+function useNextBatchDate() {
+  const [label, setLabel] = useState("");
+  useEffect(() => { setLabel(fmtBatchDate(getNextBatchStartUTC())); }, []);
+  return label;
+}
+
 // ─── Batch Countdown ──────────────────────────────────────────────────────────
 function BatchCountdown({ onRegister }) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [batchDates, setBatchDates] = useState({ thu: "", fri: "", sat: "" });
 
   useEffect(() => {
-    // Batches are paused until September 2026, then resume running only
-    // in the 1st and 3rd week of every month (Thu-Fri-Sat, Day 1 at
-    // 9AM IST) — not every week.
-    const SCHEDULE_RESUME_YEAR = 2026;
-    const SCHEDULE_RESUME_MONTH = 8; // 0-based: 8 = September
-
-    // Returns the real UTC instant for 9:00 AM IST on the Nth Thursday
-    // (n=1 or 3) of the given IST calendar year/month (month is 0-based).
-    function getNthThursdayBatchStart(year, month, n) {
-      const firstOfMonth = new Date(Date.UTC(year, month, 1));
-      const firstDayOfWeek = firstOfMonth.getUTCDay(); // day-of-week is timezone-invariant for a given calendar date
-      const offsetToThursday = (4 - firstDayOfWeek + 7) % 7;
-      const thursdayDateNum = 1 + offsetToThursday + (n - 1) * 7;
-      const istTarget = new Date(Date.UTC(year, month, thursdayDateNum, 9, 0, 0));
-      return new Date(istTarget.getTime() - 5.5 * 3600000);
-    }
-
-    // Walk forward month by month from the resume month, picking the
-    // earliest 1st/3rd-Thursday batch start that hasn't happened yet.
-    function getNextBatchStartUTC() {
-      const now = new Date();
-      let year = SCHEDULE_RESUME_YEAR;
-      let month = SCHEDULE_RESUME_MONTH;
-
-      for (let i = 0; i < 24; i++) {
-        const candidates = [
-          getNthThursdayBatchStart(year, month, 1),
-          getNthThursdayBatchStart(year, month, 3),
-        ].sort((a, b) => a - b);
-
-        for (const candidate of candidates) {
-          if (candidate.getTime() > now.getTime()) return candidate;
-        }
-
-        month += 1;
-        if (month > 11) { month = 0; year += 1; }
-      }
-      return getNthThursdayBatchStart(year, month, 1); // 24-month safety fallback
-    }
-
     const target = getNextBatchStartUTC();
     const thu = new Date(target);
     const fri = new Date(target); fri.setUTCDate(fri.getUTCDate() + 1);
     const sat = new Date(target); sat.setUTCDate(sat.getUTCDate() + 2);
-    const fmt = (d) => d.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
-    setBatchDates({ thu: fmt(thu), fri: fmt(fri), sat: fmt(sat) });
+    setBatchDates({ thu: fmtBatchDate(thu), fri: fmtBatchDate(fri), sat: fmtBatchDate(sat) });
     const tick = setInterval(() => {
       const diff = target.getTime() - Date.now();
       if (diff <= 0) { clearInterval(tick); return; }
@@ -244,9 +257,9 @@ function BatchCountdown({ onRegister }) {
   );
 
   const days = [
-    { label: "Day 1", date: batchDates.thu, tag: "Self-Paced", icon: "📖", color: "#A78BFA", desc: "Foundations — unlock materials at 9AM IST" },
-    { label: "Day 2", date: batchDates.fri, tag: "Self-Paced", icon: "🎵", color: "#60A5FA", desc: "Playing Worship Songs — practice at your pace" },
-    { label: "Day 3", date: batchDates.sat, tag: "LIVE SESSION", icon: "🔴", color: "#F59E0B", desc: "Worship Application — join live with Daniel Prabakar" },
+    { label: "Day 1", date: batchDates.thu, tag: "Self-Paced", icon: "📖", color: "#A78BFA", desc: "Foundations — unlock materials at 9AM IST", detail: "Master hand positioning, 3 core chord patterns, and rhythm fundamentals every worship pianist needs" },
+    { label: "Day 2", date: batchDates.fri, tag: "Self-Paced", icon: "🎵", color: "#60A5FA", desc: "Playing Worship Songs — practice at your pace", detail: "Apply your new skills to real worship songs — play through complete songs with step-by-step guidance" },
+    { label: "Day 3", date: batchDates.sat, tag: "LIVE SESSION", icon: "🔴", color: "#F59E0B", desc: "Worship Application — join live with Daniel Prabakar", detail: "Play together in our live group session — get real-time feedback, ask questions, and build confidence on stage" },
   ];
 
   return (
@@ -283,12 +296,13 @@ function BatchCountdown({ onRegister }) {
               <div className="text-sm font-bold text-white" style={{ fontFamily: "'Manrope',sans-serif" }}>{d.date}</div>
               <div className="mt-1.5 inline-block px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: `${d.color}18`, color: d.color }}>{d.tag}</div>
               <p className="mt-2 text-xs leading-snug hidden md:block" style={{ color: "#8B93A7" }}>{d.desc}</p>
+              <p className="mt-1 text-xs leading-snug hidden md:block" style={{ color: "#5B6478" }}>{d.detail}</p>
             </div>
           ))}
         </div>
         <div className="text-center">
           <PrimaryBtn large onClick={onRegister}>Secure My Spot — ₹249 <ArrowRight size={16} /></PrimaryBtn>
-          <p className="mt-3 text-xs" style={{ color: "#444D60" }}>🔒 Limited seats per batch · Days 1 &amp; 2 self-paced · Day 3 live with Daniel Prabakar</p>
+          <p className="mt-3 text-xs" style={{ color: "#444D60" }}>🔒 Limited seats per batch — for personalized Day 3 feedback · Days 1 &amp; 2 self-paced · Day 3 live with Daniel Prabakar</p>
         </div>
       </div>
     </section>
@@ -595,6 +609,10 @@ export default function WorshipKeysChallenge() {
   // loads here and fires PageView on mount.
   useEffect(() => { loadMetaPixel(); }, []);
 
+  // Same next-batch date the countdown widget shows further down — shared
+  // via useNextBatchDate so the hero pill can never disagree with it.
+  const nextBatchLabel = useNextBatchDate();
+
   useEffect(() => {
     const h = () => {
       setScrolled(window.scrollY > 60);
@@ -664,6 +682,7 @@ export default function WorshipKeysChallenge() {
     { q: "Who is this workshop designed for?", a: "Church keyboard players, worship team musicians, beginners, and intermediate pianists who want to play worship songs confidently without depending entirely on sheet music or YouTube tutorials." },
     { q: "Do I need a keyboard to participate?", a: "Yes, a basic 5-octave keyboard or piano is recommended. Even an entry-level digital keyboard is perfectly sufficient." },
     { q: "Will session recordings be available?", a: "Yes. All registered students receive lifetime access to full session recordings so you can rewatch and review at your own pace." },
+    { q: "Will I have access to the materials after the 3 days?", a: "Yes — lifetime access to all session videos, plus you'll be invited to our private WhatsApp community for ongoing support and future updates." },
     { q: "Can absolute beginners join?", a: "Absolutely. Day 1 begins from keyboard orientation and understanding notes — the very basics. No prior theory knowledge is required." },
     { q: "Will I receive notes and materials?", a: "Yes — comprehensive PDF notes, chord charts for every key, and 12 practice backing tracks are all included in your ₹249 enrollment." },
     { q: "How do I attend the live sessions?", a: "Sessions are conducted live online via Zoom. You'll receive the meeting link immediately after registration confirmation." },
@@ -747,7 +766,11 @@ export default function WorshipKeysChallenge() {
               <p className="mt-6 text-lg leading-relaxed max-w-lg" style={{ color: MUT }}>
                 The practical foundations every church keyboard player needs to confidently accompany worship songs — even if you're a complete beginner with no music theory background.
               </p>
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)", color: "#8B93A7" }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" style={{ boxShadow: "0 0 6px #34d399" }} />
+                <span><strong style={{ color: "#34d399" }}>500+</strong> musicians trained{nextBatchLabel && <> · Next batch starts <strong style={{ color: "#F1F5F9" }}>{nextBatchLabel}</strong></>}</span>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-4">
                 <PrimaryBtn large className="btn-shimmer" onClick={() => setShowModal(true)}>Reserve My Seat — ₹249 <ArrowRight size={16} /></PrimaryBtn>
                 <SecondaryBtn onClick={() => document.getElementById("curriculum")?.scrollIntoView({ behavior: "smooth" })}><Play size={14} /> View Curriculum</SecondaryBtn>
               </div>
@@ -807,7 +830,7 @@ export default function WorshipKeysChallenge() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {problems.map((p, i) => (
                 <Reveal key={i} delay={i * 55}>
-                  <div className="ch p-5 rounded-2xl h-full" style={{ background: CARD, border: "1px solid rgba(245,158,11,0.08)" }}>
+                  <div className="ch p-5 rounded-2xl h-full" style={{ background: CARD, borderTop: "1px solid rgba(245,158,11,0.08)", borderRight: "1px solid rgba(245,158,11,0.08)", borderBottom: "1px solid rgba(245,158,11,0.08)", borderLeft: "3px solid #D97460" }}>
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: "rgba(245,158,11,0.08)", color: A }}>{p.icon}</div>
                     <p className="text-sm leading-relaxed" style={{ color: TXT }}>{p.text}</p>
                   </div>
@@ -822,9 +845,9 @@ export default function WorshipKeysChallenge() {
         <section className="py-28 px-6" style={{ background: BG3 }}>
           <div className="max-w-5xl mx-auto">
             <Reveal><SectionTitle variant="violet" eyebrow="The Transformation" heading={<>Before & After the <VioletText>Challenge</VioletText></>} sub="Three days is all it takes to fundamentally change how you play and serve." /></Reveal>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 items-stretch">
               <Reveal delay={100}>
-                <div className="rounded-2xl p-6" style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)" }}>
+                <div className="rounded-2xl p-7 h-full" style={{ background: "rgba(239,68,68,0.04)", borderTop: "1px solid rgba(239,68,68,0.12)", borderRight: "1px solid rgba(239,68,68,0.12)", borderBottom: "1px solid rgba(239,68,68,0.12)", borderLeft: "3px solid rgba(239,68,68,0.45)" }}>
                   <div className="flex items-center gap-2 mb-5">
                     <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "rgba(239,68,68,0.15)" }}><X size={12} color="#f87171" /></div>
                     <span className="text-sm font-bold text-red-400" style={{ fontFamily: "'Manrope',sans-serif" }}>Before Workshop</span>
@@ -836,21 +859,68 @@ export default function WorshipKeysChallenge() {
                   ))}
                 </div>
               </Reveal>
+              <div className="hidden md:flex items-center justify-center">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(230,184,0,0.12)", border: "1px solid rgba(230,184,0,0.35)" }}>
+                  <ArrowRight size={18} color="#E6B800" />
+                </div>
+              </div>
               <Reveal delay={200}>
-                <div className="rounded-2xl p-6" style={{ background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.12)" }}>
+                <div className="rounded-2xl p-7 h-full" style={{ background: "rgba(74,124,89,0.05)", borderTop: "1px solid rgba(74,124,89,0.18)", borderRight: "1px solid rgba(74,124,89,0.18)", borderBottom: "1px solid rgba(74,124,89,0.18)", borderLeft: "3px solid #4A7C59" }}>
                   <div className="flex items-center gap-2 mb-5">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "rgba(52,211,153,0.15)" }}><CheckCircle size={12} color="#34d399" /></div>
-                    <span className="text-sm font-bold text-emerald-400" style={{ fontFamily: "'Manrope',sans-serif" }}>After Workshop</span>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "rgba(74,124,89,0.2)" }}><CheckCircle size={12} color="#6FA37F" /></div>
+                    <span className="text-sm font-bold" style={{ color: "#6FA37F", fontFamily: "'Manrope',sans-serif" }}>After Workshop</span>
                   </div>
                   {["Plays worship songs by ear with understanding", "Knows chord movement and how progressions work", "Performs with genuine confidence on stage", "Serves the worship team without anxiety", "Transposing between keys feels natural", "Accompanies singers with ease and clarity"].map((t) => (
-                    <div key={t} className="flex items-start gap-3 text-sm py-2.5 border-b last:border-0" style={{ color: TXT, borderColor: "rgba(52,211,153,0.07)" }}>
-                      <span className="mt-0.5 text-emerald-400 flex-shrink-0">✓</span>{t}
+                    <div key={t} className="flex items-start gap-3 text-sm py-2.5 border-b last:border-0" style={{ color: TXT, borderColor: "rgba(74,124,89,0.12)" }}>
+                      <span className="mt-0.5 flex-shrink-0" style={{ color: "#6FA37F" }}>✓</span>{t}
                     </div>
                   ))}
                 </div>
               </Reveal>
             </div>
-            <SectionCTA label="Become a Confident Worship Keyboard Player" onClick={() => setShowModal(true)} sub="Limited seats — register today for only ₹249" />
+            <SectionCTA label="Become a Confident Worship Keyboard Player" onClick={() => setShowModal(true)} sub="🔒 Secure checkout · Razorpay  ·  ✓ Lifetime access  ·  Limited seats — register today for only ₹249" />
+          </div>
+        </section>
+
+        {/* INSTRUCTOR */}
+        <section id="instructor" className="py-28 px-6" style={{ background: BG2 }}>
+          <div className="max-w-5xl mx-auto">
+            <Reveal><SectionTitle eyebrow="Your Instructor" heading={<>Meet <AmberText>Daniel Prabakar</AmberText></>} /></Reveal>
+            <Reveal>
+              <GlassCard className="overflow-hidden" style={{ border: "1px solid rgba(124,58,237,0.2)", boxShadow: "0 40px 80px rgba(0,0,0,0.4)" }}>
+                <div className="grid md:grid-cols-5">
+                  <div className="md:col-span-2 relative">
+                    <img src={Daniel} alt="Daniel Prabakar" className="w-full h-72 md:h-full object-cover" style={{ filter: "brightness(0.9) saturate(1.05)" }} />
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.2),transparent 60%)" }} />
+                    <div className="absolute bottom-4 left-4 px-3 py-2 rounded-xl" style={{ background: "rgba(7,9,26,0.85)", border: "1px solid rgba(245,158,11,0.2)", backdropFilter: "blur(8px)" }}>
+                      <p className="text-xs font-bold" style={{ color: A }}>Grade 8 Piano, TCL</p>
+                      <p className="text-xs" style={{ color: MUT }}>12+ Years in Ministry</p>
+                    </div>
+                  </div>
+                  <div className="md:col-span-3 p-8 md:p-10 flex flex-col justify-center" style={{ borderLeft: "3px solid #D97460" }}>
+                    <Badge variant="violet">Founder & Lead Instructor</Badge>
+                    <h3 className="mt-4 text-3xl font-extrabold text-white" style={{ fontFamily: "'Manrope',sans-serif" }}>Daniel Prabakar</h3>
+                    <p className="mt-1 text-sm font-semibold" style={{ color: A }}>Worship Keyboard Coach · Church Music Director</p>
+                    <p className="mt-5 text-sm leading-relaxed" style={{ color: MUT }}>For over a decade, I've had the privilege of serving in church worship teams, leading musicians, and mentoring aspiring keyboard players. I noticed that many passionate musicians struggled—not because they lacked talent, but because they were never taught music in a practical, worship-focused way.</p>
+                    <p className="mt-3 text-sm leading-relaxed" style={{ color: MUT }}>That's why I founded <strong style={{ color: TXT }}>Jubal Music Academy</strong>—to help aspiring musicians develop confidence, understand music practically, and serve their churches with excellence.</p>
+                    <div className="mt-5 p-4 rounded-2xl" style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.15)" }}>
+                      <Quote size={18} color="#A78BFA" className="mb-2" />
+                      <p className="text-sm italic leading-relaxed" style={{ color: TXT }}>"My goal isn't just to teach you songs. I want to help you understand music so you can confidently play, grow, and serve wherever God has placed you."</p>
+                      <p className="mt-2 text-xs font-semibold" style={{ color: "#A78BFA" }}>— Daniel Prabakar, Founder · Jubal Music Academy</p>
+                    </div>
+                    <div className="mt-6 grid grid-cols-3 gap-3">
+                      {[["100+", "Students Mentored"], ["10+", "Years of Serving"], ["6+", "Years of Teaching"]].map(([n, l]) => (
+                        <div key={l} className="text-center p-3 rounded-xl" style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)" }}>
+                          <div className="text-lg font-extrabold" style={{ color: A, fontFamily: "'Manrope',sans-serif" }}>{n}</div>
+                          <div className="text-xs mt-0.5" style={{ color: MUT }}>{l}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-6"><SecondaryBtn href={WEBSITE}><Globe size={14} /> Explore All Courses</SecondaryBtn></div>
+                  </div>
+                </div>
+              </GlassCard>
+            </Reveal>
           </div>
         </section>
 
@@ -885,48 +955,6 @@ export default function WorshipKeysChallenge() {
           </div>
         </section>
 
-        {/* INSTRUCTOR */}
-        <section id="instructor" className="py-28 px-6" style={{ background: BG2 }}>
-          <div className="max-w-5xl mx-auto">
-            <Reveal><SectionTitle eyebrow="Your Instructor" heading={<>Meet <AmberText>Daniel Prabakar</AmberText></>} /></Reveal>
-            <Reveal>
-              <GlassCard className="overflow-hidden" style={{ border: "1px solid rgba(124,58,237,0.2)", boxShadow: "0 40px 80px rgba(0,0,0,0.4)" }}>
-                <div className="grid md:grid-cols-5">
-                  <div className="md:col-span-2 relative">
-                    <img src={Daniel} alt="Daniel Prabakar" className="w-full h-72 md:h-full object-cover" style={{ filter: "brightness(0.9) saturate(1.05)" }} />
-                    <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.2),transparent 60%)" }} />
-                    <div className="absolute bottom-4 left-4 px-3 py-2 rounded-xl" style={{ background: "rgba(7,9,26,0.85)", border: "1px solid rgba(245,158,11,0.2)", backdropFilter: "blur(8px)" }}>
-                      <p className="text-xs font-bold" style={{ color: A }}>Grade 8 Piano, TCL</p>
-                      <p className="text-xs" style={{ color: MUT }}>12+ Years in Ministry</p>
-                    </div>
-                  </div>
-                  <div className="md:col-span-3 p-8 md:p-10 flex flex-col justify-center">
-                    <Badge variant="violet">Founder & Lead Instructor</Badge>
-                    <h3 className="mt-4 text-3xl font-extrabold text-white" style={{ fontFamily: "'Manrope',sans-serif" }}>Daniel Prabakar</h3>
-                    <p className="mt-1 text-sm font-semibold" style={{ color: A }}>Worship Keyboard Coach · Church Music Director</p>
-                    <p className="mt-5 text-sm leading-relaxed" style={{ color: MUT }}>For over a decade, I've had the privilege of serving in church worship teams, leading musicians, and mentoring aspiring keyboard players. I noticed that many passionate musicians struggled—not because they lacked talent, but because they were never taught music in a practical, worship-focused way.</p>
-                    <p className="mt-3 text-sm leading-relaxed" style={{ color: MUT }}>That's why I founded <strong style={{ color: TXT }}>Jubal Music Academy</strong>—to help aspiring musicians develop confidence, understand music practically, and serve their churches with excellence.</p>
-                    <div className="mt-5 p-4 rounded-2xl" style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.15)" }}>
-                      <Quote size={18} color="#A78BFA" className="mb-2" />
-                      <p className="text-sm italic leading-relaxed" style={{ color: TXT }}>"My goal isn't just to teach you songs. I want to help you understand music so you can confidently play, grow, and serve wherever God has placed you."</p>
-                      <p className="mt-2 text-xs font-semibold" style={{ color: "#A78BFA" }}>— Daniel Prabakar, Founder · Jubal Music Academy</p>
-                    </div>
-                    <div className="mt-6 grid grid-cols-3 gap-3">
-                      {[["100+", "Students Mentored"], ["10+", "Years of Serving"], ["6+", "Years of Teaching"]].map(([n, l]) => (
-                        <div key={l} className="text-center p-3 rounded-xl" style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)" }}>
-                          <div className="text-lg font-extrabold" style={{ color: A, fontFamily: "'Manrope',sans-serif" }}>{n}</div>
-                          <div className="text-xs mt-0.5" style={{ color: MUT }}>{l}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-6"><SecondaryBtn href={WEBSITE}><Globe size={14} /> Explore All Courses</SecondaryBtn></div>
-                  </div>
-                </div>
-              </GlassCard>
-            </Reveal>
-          </div>
-        </section>
-
         {/* WHY JUBAL */}
         <section className="py-28 px-6" style={{ background: BG }}>
           <div className="max-w-6xl mx-auto">
@@ -952,7 +980,7 @@ export default function WorshipKeysChallenge() {
             <div className="grid md:grid-cols-3 gap-5">
               {testimonials.map((t, i) => (
                 <Reveal key={t.name} delay={i * 100}>
-                  <GlassCard className="ch p-6 flex flex-col h-full" style={{ border: "1px solid rgba(245,158,11,0.08)" }}>
+                  <GlassCard className="ch p-6 flex flex-col h-full" style={{ borderRight: "1px solid rgba(245,158,11,0.08)", borderBottom: "1px solid rgba(245,158,11,0.08)", borderLeft: "1px solid rgba(245,158,11,0.08)", borderTop: "3px solid #E6B800" }}>
                     <div className="flex gap-0.5 mb-4">{Array(5).fill(0).map((_, j) => <Star key={j} size={13} fill={A} color={A} />)}</div>
                     <p className="text-sm leading-relaxed flex-1 mb-5 italic" style={{ color: TXT }}>"{t.quote}"</p>
                     <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: "rgba(245,158,11,0.07)" }}>
