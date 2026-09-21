@@ -176,16 +176,24 @@ function FormSelect({ label, value, onChange, options }) {
 }
 
 // ─── Batch scheduling ─────────────────────────────────────────────────────────
-// Batches are paused until September 2026, then resume running only in the
-// 1st and 3rd week of every month (Thu-Fri-Sat, Day 1 at 9AM IST) — not every
-// week. Pure/module-level so BatchCountdown and the hero social-proof pill
-// both compute the exact same "next batch" date — never two different dates
-// shown on the same page.
+// Batches are paused until September 2026, then resume running only twice a
+// month (Thu-Fri-Sat, Day 1 at 9AM IST) — not every week. Normally that's the
+// 1st and 3rd week, except October 2026 which is shifted one week later (2nd
+// and 4th) as a one-off; November 2026 onward reverts to 1st/3rd. Pure/
+// module-level so BatchCountdown and the hero social-proof pill both compute
+// the exact same "next batch" date — never two different dates shown on the
+// same page.
 const SCHEDULE_RESUME_YEAR = 2026;
 const SCHEDULE_RESUME_MONTH = 8; // 0-based: 8 = September
 
+// One-off exception: October 2026 (month 9) runs weeks 2 & 4 instead of 1 & 3.
+function getBatchWeeksForMonth(year, month) {
+  if (year === 2026 && month === 9) return [2, 4];
+  return [1, 3];
+}
+
 // Returns the real UTC instant for 9:00 AM IST on the Nth Thursday
-// (n=1 or 3) of the given IST calendar year/month (month is 0-based).
+// of the given IST calendar year/month (month is 0-based).
 function getNthThursdayBatchStart(year, month, n) {
   const firstOfMonth = new Date(Date.UTC(year, month, 1));
   const firstDayOfWeek = firstOfMonth.getUTCDay(); // day-of-week is timezone-invariant for a given calendar date
@@ -196,16 +204,17 @@ function getNthThursdayBatchStart(year, month, n) {
 }
 
 // Walk forward month by month from the resume month, picking the earliest
-// 1st/3rd-Thursday batch start that hasn't happened yet.
+// batch start (per that month's scheduled weeks) that hasn't happened yet.
 function getNextBatchStartUTC() {
   const now = new Date();
   let year = SCHEDULE_RESUME_YEAR;
   let month = SCHEDULE_RESUME_MONTH;
 
   for (let i = 0; i < 24; i++) {
+    const [weekA, weekB] = getBatchWeeksForMonth(year, month);
     const candidates = [
-      getNthThursdayBatchStart(year, month, 1),
-      getNthThursdayBatchStart(year, month, 3),
+      getNthThursdayBatchStart(year, month, weekA),
+      getNthThursdayBatchStart(year, month, weekB),
     ].sort((a, b) => a - b);
 
     for (const candidate of candidates) {
@@ -215,7 +224,8 @@ function getNextBatchStartUTC() {
     month += 1;
     if (month > 11) { month = 0; year += 1; }
   }
-  return getNthThursdayBatchStart(year, month, 1); // 24-month safety fallback
+  const [fallbackWeek] = getBatchWeeksForMonth(year, month);
+  return getNthThursdayBatchStart(year, month, fallbackWeek); // 24-month safety fallback
 }
 
 const fmtBatchDate = (d) => d.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
