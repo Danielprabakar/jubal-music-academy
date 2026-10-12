@@ -176,20 +176,21 @@ function FormSelect({ label, value, onChange, options }) {
 }
 
 // ─── Batch scheduling ─────────────────────────────────────────────────────────
-// Batches are paused until September 2026, then resume running only twice a
-// month (Thu-Fri-Sat, Day 1 at 9AM IST) — not every week. Normally that's the
-// 1st and 3rd week, except October 2026 which is shifted one week later (2nd
-// and 4th) as a one-off; November 2026 onward reverts to 1st/3rd. Pure/
-// module-level so BatchCountdown and the hero social-proof pill both compute
-// the exact same "next batch" date — never two different dates shown on the
-// same page.
+// Batches run Thu-Fri-Sat, Day 1 at 9AM IST. Schedule:
+//   • October 2026  — one batch only, Thu 29 Oct (5th Thursday)
+//   • November 2026 — one batch only, Thu 26 Nov (last Thursday)
+//   • December 2026 onward — one batch per month, on the 2nd Thursday
+// Pure/module-level so BatchCountdown and the hero social-proof pill both
+// compute the exact same "next batch" date — never two different dates shown
+// on the same page.
 const SCHEDULE_RESUME_YEAR = 2026;
-const SCHEDULE_RESUME_MONTH = 8; // 0-based: 8 = September
+const SCHEDULE_RESUME_MONTH = 9; // 0-based: 9 = October
 
-// One-off exception: October 2026 (month 9) runs weeks 2 & 4 instead of 1 & 3.
+// Which Thursday(s) of the month a batch starts on (1 = 1st Thursday, etc.).
 function getBatchWeeksForMonth(year, month) {
-  if (year === 2026 && month === 9) return [2, 4];
-  return [1, 3];
+  if (year === 2026 && month === 9) return [5];  // 29 Oct 2026
+  if (year === 2026 && month === 10) return [4]; // 26 Nov 2026 (last Thursday)
+  return [2]; // Dec 2026 onward: 2nd Thursday of every month
 }
 
 // Returns the real UTC instant for 9:00 AM IST on the Nth Thursday
@@ -211,11 +212,9 @@ function getNextBatchStartUTC() {
   let month = SCHEDULE_RESUME_MONTH;
 
   for (let i = 0; i < 24; i++) {
-    const [weekA, weekB] = getBatchWeeksForMonth(year, month);
-    const candidates = [
-      getNthThursdayBatchStart(year, month, weekA),
-      getNthThursdayBatchStart(year, month, weekB),
-    ].sort((a, b) => a - b);
+    const candidates = getBatchWeeksForMonth(year, month)
+      .map((week) => getNthThursdayBatchStart(year, month, week))
+      .sort((a, b) => a - b);
 
     for (const candidate of candidates) {
       if (candidate.getTime() > now.getTime()) return candidate;
